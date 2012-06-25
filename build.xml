@@ -29,6 +29,13 @@
         <javac srcdir="${src.dir}" destdir="${build.prod.dir}" classpathref="classpath" />
     </target>
 
+    <target name="jar" depends="compile">
+        <jar destfile="${build.jar.dir}/Encrypt.jar" basedir="${build.prod.dir}">
+            <manifest>
+                <attribute name="Main-Class" value="com.develogical.crypto.Encrypt" />
+            </manifest>
+        </jar>
+    </target>
 
 
 </project>
