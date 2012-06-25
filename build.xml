@@ -45,4 +45,9 @@
         <delete dir="${build.dir}" />
     </target>
 
+    <target name="compile-tests" depends="compile">
+        <javac srcdir="${unit.test.dir}" destdir="${build.test.dir}" classpathref="classpath" />
+        <javac srcdir="${system.test.dir}" destdir="${build.test.dir}" classpathref="classpath" />
+    </target>
+
 </project>
