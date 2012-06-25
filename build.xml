@@ -1,5 +1,5 @@
 <project name="SimpleProject">
-    <property name="build.dir" vaule="build" />
+    <property name="build.dir" value="build" />
     <property name="build.prod.dir" value="${build.dir}/prod" />
     <property name="build.test.dir" value="${build.dir}/test" />
     <property name="build.jar.dir" value="${build.dir}/jar" />
@@ -24,5 +24,11 @@
         <mkdir dir="${system.test.dir}" />
         <mkdir dir="${lib.dir}" />
     </target>
+
+    <target name="compile" depends="prepare">
+        <javac srcdir="${src.dir}" destdir="${build.prod.dir}" classpathref="classpath" />
+    </target>
+
+
 
 </project>
