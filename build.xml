@@ -41,4 +41,8 @@
         <java jar="${build.jar.dir}/Encrypt.jar" fork="true" />
     </target>
 
+    <target name="clean">
+        <delete dir="${build.dir}" />
+    </target>
+
 </project>
