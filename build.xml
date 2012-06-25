@@ -50,15 +50,33 @@
         <javac srcdir="${system.test.dir}" destdir="${build.test.dir}" classpathref="classpath" />
     </target>
 
+    <!-- properties created for html dirs -->
+    <property name="test.report.dir" value="${build.dir}/junitreport" />
+    <property name="unit.test.report.dir" value="${build.dir}/junitreport/unit-test" />
+
     <target name="run-unit-tests" depends="compile,compile-tests">
+
+        <!-- prepare dirs for html generation -->
+        <mkdir dir="${test.report.dir}" />
+        <mkdir dir="${unit.test.report.dir}" />
+
+        <!-- run the unit tests -->
         <junit printsummary="yes" errorProperty="test.failed" failureProperty="test.failed">
             <classpath refid="classpath" />
-            <formatter type="brief" usefile="false"/>
+            <formatter type="xml" />
             <batchtest fork="yes" todir="${unit.test.report.dir}">
                 <fileset dir="unit-test/" includes="**/*Test.java" />
             </batchtest>
         </junit>
+
+        <!-- create html report -->
+        <junitreport todir="${unit.test.report.dir}">
+            <fileset dir="${unit.test.report.dir}" includes="TEST-*.xml" />
+            <report todir="${unit.test.report.dir}" />
+        </junitreport>
+
         <fail message="Unit tests failed - please fix appropriate code" if="test.failed" />
+
     </target>
 
 </project>
