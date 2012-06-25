@@ -50,4 +50,14 @@
         <javac srcdir="${system.test.dir}" destdir="${build.test.dir}" classpathref="classpath" />
     </target>
 
+    <target name="run-unit-tests" depends="compile,compile-tests">
+        <junit printsummary="yes">
+            <classpath refid="classpath" />
+            <formatter type="brief" usefile="false"/>
+            <batchtest fork="yes" todir="${unit.test.report.dir}">
+                <fileset dir="unit-test/" includes="**/*Test.java" />
+            </batchtest>
+        </junit>
+    </target>
+
 </project>
