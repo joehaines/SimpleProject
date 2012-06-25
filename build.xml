@@ -53,12 +53,14 @@
     <!-- properties created for html dirs -->
     <property name="test.report.dir" value="${build.dir}/junitreport" />
     <property name="unit.test.report.dir" value="${build.dir}/junitreport/unit-test" />
+    <property name="system.test.report.dir" value="${build.dir}/junitreport/system-test" />
 
-    <target name="run-unit-tests" depends="compile,compile-tests">
+    <target name="run-tests" depends="compile,compile-tests">
 
         <!-- prepare dirs for html generation -->
         <mkdir dir="${test.report.dir}" />
         <mkdir dir="${unit.test.report.dir}" />
+        <mkdir dir="${system.test.report.dir}" />
 
         <!-- run the unit tests -->
         <junit printsummary="yes" errorProperty="test.failed" failureProperty="test.failed">
@@ -67,15 +69,24 @@
             <batchtest fork="yes" todir="${unit.test.report.dir}">
                 <fileset dir="unit-test/" includes="**/*Test.java" />
             </batchtest>
+            <batchtest fork="yes" todir="${system.test.report.dir}">
+                <fileset dir="system-test/" includes="**/*Test.java" />
+            </batchtest>
         </junit>
 
-        <!-- create html report -->
+        <!-- create unit test html report -->
         <junitreport todir="${unit.test.report.dir}">
             <fileset dir="${unit.test.report.dir}" includes="TEST-*.xml" />
             <report todir="${unit.test.report.dir}" />
         </junitreport>
 
-        <fail message="Unit tests failed - please fix appropriate code" if="test.failed" />
+        <!-- create system test html report -->
+        <junitreport todir="${system.test.report.dir}">
+            <fileset dir="${system.test.report.dir}" includes="TEST-*.xml" />
+            <report todir="${system.test.report.dir}" />
+        </junitreport>
+
+        <fail message="Tests failed - please fix appropriate code" if="test.failed" />
 
     </target>
 
