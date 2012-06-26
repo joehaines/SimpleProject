@@ -5,7 +5,7 @@ import java.util.List;
 
 public class Encrypt {
 
-    public static void main(String[] args) {
+    public static void main_BROKEN(String[] args) {
         System.out.println(new Encrypt().run(args));
     }
 
