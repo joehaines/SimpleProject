@@ -5,7 +5,7 @@ import java.util.List;
 
 public class Encrypt {
 
-    public static void main_BROKEN(String[] args) {
+    public static void main(String[] args) {
         System.out.println(new Encrypt().run(args));
     }
 
@@ -16,7 +16,7 @@ public class Encrypt {
             return usageMessage();
         }
 
-        Cipher transform = null;
+        Cipher_BROKEN transform = null;
         Mode mode = Mode.ENCODE;
         String text = "";
         for (String arg : argList) {

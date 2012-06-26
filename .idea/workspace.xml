@@ -79,7 +79,7 @@
       <file leaf-file-name="build.xml" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/build.xml">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="86" column="66" selection-start="3561" selection-end="3561" vertical-scroll-proportion="0.0">
+            <state line="17" column="54" selection-start="740" selection-end="740" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
@@ -88,7 +88,7 @@
       <file leaf-file-name="Encrypt.java" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/com/develogical/crypto/Encrypt.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="10" column="23" selection-start="217" selection-end="217" vertical-scroll-proportion="0.16443361">
+            <state line="19" column="50" selection-start="455" selection-end="455" vertical-scroll-proportion="0.32886723">
               <folding />
             </state>
           </provider>
@@ -447,14 +447,14 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/build.xml">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="86" column="66" selection-start="3561" selection-end="3561" vertical-scroll-proportion="0.0">
+        <state line="17" column="54" selection-start="740" selection-end="740" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/com/develogical/crypto/Encrypt.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="10" column="23" selection-start="217" selection-end="217" vertical-scroll-proportion="0.16443361">
+        <state line="19" column="50" selection-start="455" selection-end="455" vertical-scroll-proportion="0.32886723">
           <folding />
         </state>
       </provider>
