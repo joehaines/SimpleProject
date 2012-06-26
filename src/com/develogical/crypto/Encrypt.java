@@ -16,7 +16,7 @@ public class Encrypt {
             return usageMessage();
         }
 
-        Cipher_BROKEN transform = null;
+        Cipher transform = null;
         Mode mode = Mode.ENCODE;
         String text = "";
         for (String arg : argList) {
