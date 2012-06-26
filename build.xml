@@ -86,7 +86,7 @@
             <report todir="${system.test.report.dir}" />
         </junitreport>
 
-        <fail message="Tests failed - please fix appropriate code" if="test.failed" />
+        <fail message="Tests failed - please fix appropriate code or unit / system tests" if="test.failed" />
 
     </target>
 
