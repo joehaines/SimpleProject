@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vodafone Future Lab: Antigravity UX Demo</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --red: #e60000;
+      --dark: #1a1a1a;
+      --mid: #444;
+      --light: #f5f5f5;
+      --purple: #7b2ff7;
+      --blue: #2563eb;
+      --grad: linear-gradient(135deg, #a855f7 0%, #3b82f6 100%);
+    }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #fff;
+      color: var(--dark);
+      overflow-x: hidden;
+    }
+
+    /* ─── NAV ─── */
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 48px;
+      border-bottom: 1px solid #eee;
+      position: sticky;
+      top: 0;
+      background: #fff;
+      z-index: 100;
+      box-shadow: 0 2px 8px rgba(0,0,0,.06);
+    }
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--dark);
+    }
+    .nav-logo .v-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--red);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 900;
+      font-size: 1.1rem;
+    }
+    .nav-links { display: flex; align-items: center; gap: 32px; }
+    .nav-links a {
+      text-decoration: none;
+      color: var(--dark);
+      font-size: .9rem;
+      transition: color .2s;
+    }
+    .nav-links a:hover { color: var(--red); }
+    .btn-red {
+      background: var(--red);
+      color: #fff;
+      border: none;
+      padding: 10px 22px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: .9rem;
+      transition: background .2s, transform .1s;
+    }
+    .btn-red:hover { background: #cc0000; transform: scale(1.03); }
+
+    /* ─── HERO ─── */
+    .hero {
+      display: flex;
+      align-items: center;
+      min-height: calc(100vh - 65px);
+      padding: 48px 48px 32px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-left { flex: 0 0 420px; z-index: 2; }
+    .hero-left h1 {
+      font-size: 2.6rem;
+      font-weight: 900;
+      line-height: 1.15;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    .hero-left p {
+      font-size: 1rem;
+      color: var(--mid);
+      margin-bottom: 32px;
+      line-height: 1.6;
+    }
+    .hero-right {
+      flex: 1;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: auto auto;
+      gap: 16px;
+      padding-left: 40px;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* ─── FEATURE CARDS ─── */
+    .card {
+      background: #fff;
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow: 0 4px 20px rgba(0,0,0,.10);
+      position: relative;
+      overflow: hidden;
+      transition: transform .25s, box-shadow .25s;
+      cursor: default;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 30px rgba(0,0,0,.15);
+    }
+    .card h3 {
+      font-size: .75rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      color: var(--dark);
+      margin-top: 10px;
+    }
+
+    /* Floating Product Demos */
+    .card-float .phone-wrap {
+      height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .phone {
+      width: 38px;
+      height: 68px;
+      background: var(--grad);
+      border-radius: 8px;
+      box-shadow: 0 6px 18px rgba(123,47,247,.4);
+      animation: floatPhone 3s ease-in-out infinite;
+    }
+    @keyframes floatPhone {
+      0%,100% { transform: translateY(0) rotate(-5deg); }
+      50%      { transform: translateY(-14px) rotate(3deg); }
+    }
+
+    /* Dynamic Navigation */
+    .card-nav .menu-mock {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 3px 12px rgba(0,0,0,.15);
+      padding: 8px 0;
+      font-size: .78rem;
+      width: 110px;
+      margin: 0 auto 6px;
+      animation: menuDrop .6s ease forwards;
+    }
+    .card-nav .menu-mock .menu-header {
+      padding: 4px 12px;
+      font-weight: 700;
+      font-size: .75rem;
+      border-bottom: 1px solid #eee;
+      margin-bottom: 4px;
+    }
+    .card-nav .menu-mock div:not(.menu-header) {
+      padding: 4px 12px;
+      color: var(--mid);
+    }
+    .card-nav .menu-mock div:not(.menu-header):hover { background: var(--light); }
+
+    /* Motion Trails */
+    .card-motion .trail-wrap {
+      height: 70px;
+      position: relative;
+      overflow: hidden;
+    }
+    .trail-wave {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent 0%, rgba(123,47,247,.15) 50%, transparent 100%);
+    }
+    .trail-wave::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: -100%;
+      width: 200%;
+      height: 2px;
+      background: var(--grad);
+      border-radius: 2px;
+      animation: trailMove 2s linear infinite;
+    }
+    @keyframes trailMove {
+      to { left: 100%; }
+    }
+    .card-motion .chart-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 4px;
+      height: 60px;
+      padding: 8px;
+    }
+    .bar {
+      flex: 1;
+      border-radius: 3px 3px 0 0;
+      background: var(--grad);
+      animation: barGrow 1.2s ease-out forwards;
+    }
+    @keyframes barGrow {
+      from { height: 0; }
+    }
+
+    /* Gravity-Defying */
+    .card-gravity .grav-orbs {
+      height: 70px;
+      position: relative;
+    }
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      animation: orbit 4s linear infinite;
+    }
+    .orb1 { width: 24px; height: 24px; background: var(--grad); left: 20px; top: 10px; animation-delay: 0s; }
+    .orb2 { width: 16px; height: 16px; background: linear-gradient(135deg,#f472b6,#f97316); left: 70px; top: 30px; animation-delay: -1.3s; }
+    .orb3 { width: 12px; height: 12px; background: linear-gradient(135deg,#34d399,#06b6d4); left: 120px; top: 8px; animation-delay: -2.5s; }
+    @keyframes orbit {
+      0%,100% { transform: translateY(0); }
+      25%      { transform: translateY(-12px); }
+      50%      { transform: translateY(0); }
+      75%      { transform: translateY(8px); }
+    }
+
+    /* Testing Antigravity Effects */
+    .card-test {
+      grid-column: span 1;
+    }
+    .card-test .test-controls {
+      margin-top: 8px;
+    }
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 8px 0;
+      font-size: .75rem;
+      color: var(--mid);
+    }
+    .slider-row span { font-size: .8rem; }
+    input[type="range"] {
+      -webkit-appearance: none;
+      flex: 1;
+      height: 4px;
+      border-radius: 2px;
+      background: linear-gradient(90deg, var(--purple) 55%, #ddd 55%);
+      cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--purple);
+      cursor: pointer;
+      box-shadow: 0 0 4px rgba(123,47,247,.4);
+    }
+    .btn-row { display: flex; gap: 8px; margin-top: 10px; }
+    .btn-purple {
+      background: var(--purple);
+      color: #fff;
+      border: none;
+      padding: 7px 12px;
+      border-radius: 4px;
+      font-size: .72rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity .2s;
+    }
+    .btn-purple:hover { opacity: .85; }
+    .btn-outline {
+      background: #fff;
+      color: var(--dark);
+      border: 1.5px solid var(--dark);
+      padding: 7px 12px;
+      border-radius: 4px;
+      font-size: .72rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .btn-outline:hover { background: var(--light); }
+
+    /* ─── POC TRIALS ─── */
+    .poc-section {
+      margin-top: 12px;
+    }
+    .poc-section h4 {
+      font-size: .7rem;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--mid);
+      margin-bottom: 10px;
+    }
+    .poc-trials {
+      display: flex;
+      gap: 10px;
+    }
+    .trial-card {
+      flex: 1;
+      background: #fff;
+      border-radius: 10px;
+      padding: 12px 14px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.08);
+      position: relative;
+      font-size: .78rem;
+    }
+    .trial-card .trial-icon {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .75rem;
+    }
+    .icon-green { background: #dcfce7; color: #16a34a; }
+    .icon-warn  { background: #fef9c3; color: #ca8a04; }
+    .trial-card .trial-label {
+      font-size: .68rem;
+      color: var(--mid);
+      margin-bottom: 2px;
+    }
+    .trial-card strong { font-size: .8rem; }
+    .status-active  { color: #16a34a; font-size: .68rem; font-weight: 700; margin-top: 4px; }
+    .status-pending { color: var(--mid);  font-size: .68rem; font-weight: 700; margin-top: 4px; }
+
+    /* ─── FLOATING DECORATIONS ─── */
+    .deco {
+      position: absolute;
+      pointer-events: none;
+      user-select: none;
+      z-index: 1;
+    }
+    .deco-rocket {
+      font-size: 2rem;
+      animation: floatDeco 4s ease-in-out infinite;
+    }
+    .deco-atom {
+      font-size: 2.5rem;
+      animation: spinDeco 8s linear infinite;
+    }
+    .deco-orb {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      animation: floatDeco 5s ease-in-out infinite;
+    }
+    .deco-1 { top: 80px;  left: 380px; animation-delay: 0s; }
+    .deco-2 { top: 60px;  right: 60px; animation-delay: -1.5s; }
+    .deco-3 { top: 200px; right: 80px; animation-delay: -3s; }
+    .deco-4 { bottom: 120px; left: 330px; animation-delay: -2s; }
+    .deco-5 { bottom: 80px;  right: 130px; animation-delay: -0.5s; }
+    .deco-orb-1 { background: linear-gradient(135deg,#a855f7,#ec4899); top: 340px; left: 310px; }
+    .deco-orb-2 { background: linear-gradient(135deg,#22d3ee,#6366f1); bottom: 160px; right: 48px; }
+    .deco-orb-3 { background: linear-gradient(135deg,#f97316,#eab308); top: 140px; right: 200px; width:18px; height:18px; }
+
+    @keyframes floatDeco {
+      0%,100% { transform: translateY(0) rotate(0deg); }
+      50%      { transform: translateY(-16px) rotate(8deg); }
+    }
+    @keyframes spinDeco {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ─── TICKER ─── */
+    .ticker {
+      background: var(--dark);
+      color: #fff;
+      font-size: .82rem;
+      padding: 10px 0;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+    .ticker-inner {
+      display: inline-block;
+      animation: ticker 18s linear infinite;
+    }
+    @keyframes ticker {
+      from { transform: translateX(100vw); }
+      to   { transform: translateX(-100%); }
+    }
+
+    /* ─── FOOTER ─── */
+    footer {
+      background: #fff;
+      border-top: 1px solid #eee;
+      padding: 16px 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: .82rem;
+      color: var(--mid);
+    }
+    footer nav a {
+      text-decoration: none;
+      color: var(--mid);
+      margin-right: 24px;
+      transition: color .2s;
+    }
+    footer nav a:hover { color: var(--red); }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 900px) {
+      .hero { flex-direction: column; padding: 32px 24px; }
+      .hero-left { flex: none; width: 100%; margin-bottom: 32px; }
+      .hero-right { padding-left: 0; grid-template-columns: 1fr 1fr; }
+      nav { padding: 14px 24px; }
+      .nav-links a { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ─── NAV ─── -->
+<nav>
+  <div class="nav-logo">
+    <div class="v-icon">V</div>
+    Vodafone Future Lab: Antigravity UX Demo
+  </div>
+  <div class="nav-links">
+    <a href="#experiments">Experiments</a>
+    <a href="#trials">PoC Trials</a>
+    <a href="#tech">Tech Specs</a>
+    <a href="#community">Community</a>
+    <button class="btn-red">Trial Antigravity</button>
+  </div>
+</nav>
+
+<!-- ─── HERO ─── -->
+<section class="hero" id="experiments">
+
+  <!-- Decorative floating elements -->
+  <div class="deco deco-atom deco-1">⚛️</div>
+  <div class="deco deco-rocket deco-2">🚀</div>
+  <div class="deco deco-rocket deco-3" style="font-size:1.4rem;">🛸</div>
+  <div class="deco deco-rocket deco-4" style="font-size:1.8rem;">🚀</div>
+  <div class="deco deco-orb deco-orb-1"></div>
+  <div class="deco deco-orb deco-orb-2"></div>
+  <div class="deco deco-orb deco-orb-3"></div>
+
+  <!-- Left: Hero copy -->
+  <div class="hero-left">
+    <h1>Experience the Future:<br>Interactive Antigravity POC Site</h1>
+    <p>Explore Weightless Interactions<br>&amp; Dynamic User Experiences</p>
+    <button class="btn-red" style="padding:14px 28px; font-size:1rem;">Trial Antigravity</button>
+
+    <p style="margin-top:48px; font-size:.9rem; color:#555; line-height:1.7;">
+      Innovate with Vodafone.<br>Join our Future Tech Community.
+    </p>
+  </div>
+
+  <!-- Right: Feature cards grid -->
+  <div class="hero-right">
+
+    <!-- Floating Product Demos -->
+    <div class="card card-float">
+      <div class="phone-wrap">
+        <div class="phone"></div>
+      </div>
+      <h3>Floating<br>Product Demos</h3>
+    </div>
+
+    <!-- Dynamic Navigation -->
+    <div class="card card-nav">
+      <div class="menu-mock">
+        <div class="menu-header">Menu</div>
+        <div>PoC Trials</div>
+        <div>Community</div>
+      </div>
+      <h3>Dynamic<br>Navigation</h3>
+    </div>
+
+    <!-- Testing Antigravity Effects -->
+    <div class="card card-test">
+      <h3>Testing Antigravity Effects</h3>
+      <div class="test-controls">
+        <div class="slider-row">
+          <span>−</span>
+          <input type="range" min="0" max="100" value="55" id="gravSlider" />
+          <span>+</span>
+        </div>
+        <div class="btn-row">
+          <button class="btn-purple" onclick="trialMotion()">Trial Motion</button>
+          <button class="btn-outline" onclick="applyForce()">Apply Force</button>
+        </div>
+        <p id="grav-status" style="font-size:.68rem;color:var(--purple);margin-top:6px;min-height:16px;"></p>
+      </div>
+    </div>
+
+    <!-- Seamless Motion Trails -->
+    <div class="card card-motion">
+      <div class="trail-wrap">
+        <div class="trail-wave"></div>
+        <div class="chart-bars">
+          <div class="bar" style="height:30px;animation-delay:.1s"></div>
+          <div class="bar" style="height:50px;animation-delay:.2s"></div>
+          <div class="bar" style="height:40px;animation-delay:.3s"></div>
+          <div class="bar" style="height:55px;animation-delay:.15s"></div>
+          <div class="bar" style="height:35px;animation-delay:.25s"></div>
+          <div class="bar" style="height:48px;animation-delay:.05s"></div>
+        </div>
+      </div>
+      <h3>Seamless<br>Motion Trails</h3>
+    </div>
+
+    <!-- Gravity-Defying Interactions -->
+    <div class="card card-gravity">
+      <div class="grav-orbs">
+        <div class="orb orb1"></div>
+        <div class="orb orb2"></div>
+        <div class="orb orb3"></div>
+      </div>
+      <h3>Gravity-Defying<br>Interactions</h3>
+    </div>
+
+    <!-- PoC Trials (spans full row) -->
+    <div class="card poc-section" style="grid-column: 1 / -1;" id="trials">
+      <h4>PoC Trials</h4>
+      <div class="poc-trials">
+        <div class="trial-card">
+          <div class="trial-icon icon-green">✓</div>
+          <div class="trial-label">Trial 1:</div>
+          <strong>Object Suspension</strong>
+          <div class="status-active">(Active)</div>
+        </div>
+        <div class="trial-card">
+          <div class="trial-icon icon-warn">!</div>
+          <div class="trial-label">Trial 2:</div>
+          <strong>Zero-G Swipes</strong>
+          <div class="status-pending">(Pending)</div>
+        </div>
+        <div class="trial-card">
+          <div class="trial-icon icon-green">✓</div>
+          <div class="trial-label">Trial 3:</div>
+          <strong>Lift &amp; Drag Controls</strong>
+          <div class="status-active">(Active)</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /hero-right -->
+</section>
+
+<!-- ─── TICKER ─── -->
+<div class="ticker" role="marquee">
+  <span class="ticker-inner">
+    &nbsp;&nbsp;&nbsp;Innovate with Vodafone. Join our Future Tech Community.
+    &nbsp;&nbsp;&nbsp;⚛️ Antigravity UX — Live Experiments Running.
+    &nbsp;&nbsp;&nbsp;🚀 PoC Trial 1: Object Suspension — Active.
+    &nbsp;&nbsp;&nbsp;🛸 PoC Trial 3: Lift &amp; Drag Controls — Active.
+    &nbsp;&nbsp;&nbsp;Innovate with Vodafone. Join our Future Tech Community.
+  </span>
+</div>
+
+<!-- ─── FOOTER ─── -->
+<footer id="community">
+  <nav>
+    <a href="#">Overview</a>
+    <a href="#">About</a>
+    <a href="#">Triems</a>
+    <a href="#">Factsr</a>
+    <a href="#">Wiino</a>
+    <a href="#">Contact</a>
+  </nav>
+  <span>&copy; 2025 Vodafone Future Lab</span>
+</footer>
+
+<script>
+  // Slider gradient update
+  const slider = document.getElementById('gravSlider');
+  slider.addEventListener('input', function() {
+    this.style.background = `linear-gradient(90deg, var(--purple) ${this.value}%, #ddd ${this.value}%)`;
+  });
+
+  // Trial Motion button
+  function trialMotion() {
+    const status = document.getElementById('grav-status');
+    status.textContent = 'Running motion simulation…';
+    document.querySelectorAll('.orb').forEach(o => {
+      o.style.animationDuration = '1s';
+    });
+    setTimeout(() => {
+      status.textContent = 'Motion trial complete ✓';
+      document.querySelectorAll('.orb').forEach(o => {
+        o.style.animationDuration = '4s';
+      });
+    }, 2000);
+  }
+
+  // Apply Force button
+  function applyForce() {
+    const status = document.getElementById('grav-status');
+    const val = parseInt(slider.value);
+    status.textContent = `Force applied: ${val}% gravity offset`;
+    document.querySelector('.phone').style.animationDuration = (3 - val * 0.02) + 's';
+    setTimeout(() => { status.textContent = ''; }, 3000);
+  }
+</script>
+</body>
+</html>
