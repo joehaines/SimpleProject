@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 # enumerate_ado_projects.sh
-# Lists all projects in an Azure DevOps organisation using the REST API.
+# Lists all projects in an Azure DevOps organisation and writes them to a CSV.
 #
 # Usage:
-#   ./enumerate_ado_projects.sh [ORGANISATION]
+#   ./enumerate_ado_projects.sh [ORGANISATION] [OUTPUT_CSV]
+#
+#   OUTPUT_CSV defaults to ado_projects.csv in the current directory.
 #
 # Authentication:
 #   Set AZURE_DEVOPS_PAT to a Personal Access Token with "Read" access on
@@ -35,6 +37,7 @@ require_cmd jq
 # Configuration
 # ---------------------------------------------------------------------------
 ORGANISATION="${1:-${AZURE_DEVOPS_ORG:-}}"
+OUTPUT_CSV="${2:-ado_projects.csv}"
 PAT="${AZURE_DEVOPS_PAT:-}"
 
 if [[ -z "$ORGANISATION" ]]; then
@@ -89,15 +92,20 @@ if [[ $total -eq 0 ]]; then
 fi
 
 # ---------------------------------------------------------------------------
-# Display results
+# Display results and write CSV
 # ---------------------------------------------------------------------------
 printf "%-40s %-12s %-12s %s\n" "NAME" "STATE" "VISIBILITY" "ID"
 printf "%-40s %-12s %-12s %s\n" "----" "-----" "----------" "--"
 
+echo "ProjectName,ProjectID" > "$OUTPUT_CSV"
+
 for project in "${all_projects[@]}"; do
   IFS=$'\t' read -r name state visibility id <<< "$project"
   printf "%-40s %-12s %-12s %s\n" "$name" "$state" "$visibility" "$id"
+  # Quote the name in case it contains commas
+  printf '"%s","%s"\n' "$name" "$id" >> "$OUTPUT_CSV"
 done
 
 echo ""
 echo "Total projects: ${total}"
+echo "CSV written to: ${OUTPUT_CSV}"
