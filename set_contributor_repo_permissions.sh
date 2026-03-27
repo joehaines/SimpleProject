@@ -104,8 +104,9 @@ get_contributors_ace_descriptor() {
     "https://vssps.dev.azure.com/${ORGANISATION}/_apis/graph/groups?scopeDescriptor=${scope_descriptor}&${API_VERSION}") \
     || { echo "  ERROR: Failed to list groups for project ${project_id}" >&2; return 1; }
 
+  # Use jq's first() to avoid piping to head -1, which causes SIGPIPE/pipefail issues.
   group_descriptor=$(echo "$groups_resp" | \
-    jq -r '.value[] | select(.displayName == "Contributors") | .descriptor' | head -1)
+    jq -r 'first(.value[] | select(.displayName == "Contributors") | .descriptor)')
 
   [[ -n "$group_descriptor" ]] \
     || { echo "  ERROR: Contributors group not found for project ${project_id}" >&2; return 1; }
@@ -133,6 +134,18 @@ get_contributors_ace_descriptor() {
 success=0
 failure=0
 
+# Verify the CSV has data rows before entering the loop
+data_rows=$(tail -n +2 "$CSV_FILE" | tr -d '\r' | grep -c '.' || true)
+log "CSV file: ${CSV_FILE} (${data_rows} data rows)"
+if [[ "$data_rows" -gt 0 ]]; then
+  log "First data row: $(tail -n +2 "$CSV_FILE" | tr -d '\r' | head -1)"
+fi
+
+if [[ "$data_rows" -eq 0 ]]; then
+  echo "No data rows found in CSV. Run enumerate_ado_projects.sh first."
+  exit 1
+fi
+
 # Use process substitution (not a pipe) so the while loop runs in the current
 # shell, allowing success/failure counters to be updated correctly.
 while IFS=',' read -r raw_name raw_id; do
@@ -140,7 +153,11 @@ while IFS=',' read -r raw_name raw_id; do
   project_name="${raw_name//\"/}"
   project_id="${raw_id//\"/}"
 
-  [[ -z "$project_id" ]] && continue
+  log "DEBUG: raw_name='${raw_name}' raw_id='${raw_id}' project_id='${project_id}'"
+
+  # Use if/fi rather than [[ ]] && continue — the latter exits with code 1
+  # under set -e when project_id is non-empty, killing the script silently.
+  if [[ -z "$project_id" ]]; then continue; fi
 
   log "Processing: ${project_name} (${project_id})"
 
