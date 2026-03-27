@@ -81,49 +81,29 @@ log "DeleteRepository permission bit: ${DELETE_BIT}"
 # ---------------------------------------------------------------------------
 # Helper: resolve the full ACE identity descriptor for the Contributors group.
 # Returns the descriptor in "Microsoft.TeamFoundation.Identity;S-1-9-..." form.
+# Args: project_name project_id
 # Prints an error and returns 1 on failure (does not exit the script).
 # ---------------------------------------------------------------------------
 get_contributors_ace_descriptor() {
-  local project_id="$1"
+  local project_name="$1"
+  local project_id="$2"
 
-  # Step 1 – project scope descriptor (needed to scope the group listing)
-  local scope_resp scope_descriptor
-  scope_resp=$(curl --silent --fail --show-error \
-    --header "$AUTH_HEADER" \
-    "https://vssps.dev.azure.com/${ORGANISATION}/_apis/graph/descriptors/${project_id}?${API_VERSION}") \
-    || { echo "  ERROR: Failed to get scope descriptor for project ${project_id}" >&2; return 1; }
-
-  scope_descriptor=$(echo "$scope_resp" | jq -r '.value // empty')
-  [[ -n "$scope_descriptor" ]] \
-    || { echo "  ERROR: Empty scope descriptor for project ${project_id}" >&2; return 1; }
-
-  # Step 2 – list groups in project scope, find the Contributors group descriptor
-  local groups_resp group_descriptor
-  groups_resp=$(curl --silent --fail --show-error \
-    --header "$AUTH_HEADER" \
-    "https://vssps.dev.azure.com/${ORGANISATION}/_apis/graph/groups?scopeDescriptor=${scope_descriptor}&${API_VERSION}") \
-    || { echo "  ERROR: Failed to list groups for project ${project_id}" >&2; return 1; }
-
-  # Use jq's first() to avoid piping to head -1, which causes SIGPIPE/pipefail issues.
-  group_descriptor=$(echo "$groups_resp" | \
-    jq -r 'first(.value[] | select(.displayName == "Contributors") | .descriptor)')
-
-  [[ -n "$group_descriptor" ]] \
-    || { echo "  ERROR: Contributors group not found for project ${project_id}" >&2; return 1; }
-
-  # Step 3 – resolve the full identity (with SID) via the identities API.
-  # The graph storagekeys API returns only a GUID which is not valid for ACEs;
-  # the identities API returns the proper "Microsoft.TeamFoundation.Identity;S-1-9-..."
-  # descriptor that the security subsystem requires.
+  # The identities API can look up the Contributors group directly using
+  # the well-known display name "[ProjectName]\Contributors".
+  # Using curl --get --data-urlencode handles special characters in names cleanly.
   local identity_resp ace_descriptor
   identity_resp=$(curl --silent --fail --show-error \
+    --get \
     --header "$AUTH_HEADER" \
-    "https://vssps.dev.azure.com/${ORGANISATION}/_apis/identities?subjectDescriptors=${group_descriptor}&${API_VERSION}") \
-    || { echo "  ERROR: Failed to resolve identity for Contributors in project ${project_id}" >&2; return 1; }
+    --data-urlencode "searchFilter=General" \
+    --data-urlencode "filterValue=[${project_name}]\Contributors" \
+    --data-urlencode "queryMembership=None" \
+    "https://vssps.dev.azure.com/${ORGANISATION}/_apis/identities?${API_VERSION}") \
+    || { echo "  ERROR: identities API request failed for project '${project_name}'" >&2; return 1; }
 
   ace_descriptor=$(echo "$identity_resp" | jq -r '.value[0].descriptor // empty')
   [[ -n "$ace_descriptor" ]] \
-    || { echo "  ERROR: Empty ACE descriptor for Contributors in project ${project_id}" >&2; return 1; }
+    || { echo "  ERROR: Contributors group not found for project '${project_name}'" >&2; return 1; }
 
   echo "$ace_descriptor"
 }
@@ -163,7 +143,7 @@ while IFS=',' read -r raw_name raw_id || [[ -n "${raw_name:-}" ]]; do
   log "Processing: ${project_name} (${project_id})"
 
   # Resolve Contributors identity descriptor
-  ace_descriptor=$(get_contributors_ace_descriptor "$project_id") || {
+  ace_descriptor=$(get_contributors_ace_descriptor "$project_name" "$project_id") || {
     log "  SKIP – could not resolve Contributors group"
     failure=$((failure + 1))
     continue
