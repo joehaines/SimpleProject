@@ -81,8 +81,9 @@ while true; do
     [[ -n "$line" ]] && all_projects+=("$line")
   done < <(echo "$response" | jq -r '.value[] | "\(.name)\t\(.state)\t\(.visibility)\t\(.id)"')
 
-  # Continuation token is returned in the HTTP header, not the response body
-  continuation_token=$(grep -i "^x-ms-continuationtoken:" "$header_file" | tr -d '\r' | awk '{print $2}')
+  # Continuation token is returned in the HTTP header, not the response body.
+  # grep exits 1 when there is no match (last page), so || true prevents set -e from killing the script.
+  continuation_token=$(grep -i "^x-ms-continuationtoken:" "$header_file" | tr -d '\r' | awk '{print $2}' || true)
   [[ -z "$continuation_token" ]] && break
 done
 
