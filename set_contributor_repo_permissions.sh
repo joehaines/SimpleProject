@@ -79,50 +79,52 @@ DELETE_BIT=$(echo "$ns_response" | \
 log "DeleteRepository permission bit: ${DELETE_BIT}"
 
 # ---------------------------------------------------------------------------
-# Helper: get the Contributors group descriptor for a project
+# Helper: resolve the full ACE identity descriptor for the Contributors group.
+# Returns the descriptor in "Microsoft.TeamFoundation.Identity;S-1-9-..." form.
+# Prints an error and returns 1 on failure (does not exit the script).
 # ---------------------------------------------------------------------------
-get_contributors_descriptor() {
+get_contributors_ace_descriptor() {
   local project_id="$1"
 
-  # Step 1 – project scope descriptor
-  local scope_resp
+  # Step 1 – project scope descriptor (needed to scope the group listing)
+  local scope_resp scope_descriptor
   scope_resp=$(curl --silent --fail --show-error \
     --header "$AUTH_HEADER" \
     "https://vssps.dev.azure.com/${ORGANISATION}/_apis/graph/descriptors/${project_id}?${API_VERSION}") \
-    || die "Failed to get scope descriptor for project ${project_id}"
+    || { echo "  ERROR: Failed to get scope descriptor for project ${project_id}" >&2; return 1; }
 
-  local scope_descriptor
-  scope_descriptor=$(echo "$scope_resp" | jq -r '.value')
-  [[ -n "$scope_descriptor" && "$scope_descriptor" != "null" ]] \
-    || die "Empty scope descriptor for project ${project_id}"
+  scope_descriptor=$(echo "$scope_resp" | jq -r '.value // empty')
+  [[ -n "$scope_descriptor" ]] \
+    || { echo "  ERROR: Empty scope descriptor for project ${project_id}" >&2; return 1; }
 
-  # Step 2 – list groups in project scope, find Contributors
-  local groups_resp
+  # Step 2 – list groups in project scope, find the Contributors group descriptor
+  local groups_resp group_descriptor
   groups_resp=$(curl --silent --fail --show-error \
     --header "$AUTH_HEADER" \
     "https://vssps.dev.azure.com/${ORGANISATION}/_apis/graph/groups?scopeDescriptor=${scope_descriptor}&${API_VERSION}") \
-    || die "Failed to list groups for project ${project_id}"
+    || { echo "  ERROR: Failed to list groups for project ${project_id}" >&2; return 1; }
 
-  local group_descriptor
   group_descriptor=$(echo "$groups_resp" | \
     jq -r '.value[] | select(.displayName == "Contributors") | .descriptor' | head -1)
 
   [[ -n "$group_descriptor" ]] \
-    || die "Contributors group not found for project ${project_id}"
+    || { echo "  ERROR: Contributors group not found for project ${project_id}" >&2; return 1; }
 
-  # Step 3 – resolve the storage key (identity GUID) for the group
-  local key_resp
-  key_resp=$(curl --silent --fail --show-error \
+  # Step 3 – resolve the full identity (with SID) via the identities API.
+  # The graph storagekeys API returns only a GUID which is not valid for ACEs;
+  # the identities API returns the proper "Microsoft.TeamFoundation.Identity;S-1-9-..."
+  # descriptor that the security subsystem requires.
+  local identity_resp ace_descriptor
+  identity_resp=$(curl --silent --fail --show-error \
     --header "$AUTH_HEADER" \
-    "https://vssps.dev.azure.com/${ORGANISATION}/_apis/graph/storagekeys/${group_descriptor}?${API_VERSION}") \
-    || die "Failed to get storage key for Contributors group in project ${project_id}"
+    "https://vssps.dev.azure.com/${ORGANISATION}/_apis/identities?subjectDescriptors=${group_descriptor}&${API_VERSION}") \
+    || { echo "  ERROR: Failed to resolve identity for Contributors in project ${project_id}" >&2; return 1; }
 
-  local storage_key
-  storage_key=$(echo "$key_resp" | jq -r '.value')
-  [[ -n "$storage_key" && "$storage_key" != "null" ]] \
-    || die "Empty storage key for Contributors group in project ${project_id}"
+  ace_descriptor=$(echo "$identity_resp" | jq -r '.value[0].descriptor // empty')
+  [[ -n "$ace_descriptor" ]] \
+    || { echo "  ERROR: Empty ACE descriptor for Contributors in project ${project_id}" >&2; return 1; }
 
-  echo "$storage_key"
+  echo "$ace_descriptor"
 }
 
 # ---------------------------------------------------------------------------
@@ -131,8 +133,9 @@ get_contributors_descriptor() {
 success=0
 failure=0
 
-# Skip header row; handle both LF and CRLF line endings
-tail -n +2 "$CSV_FILE" | tr -d '\r' | while IFS=',' read -r raw_name raw_id; do
+# Use process substitution (not a pipe) so the while loop runs in the current
+# shell, allowing success/failure counters to be updated correctly.
+while IFS=',' read -r raw_name raw_id; do
   # Strip surrounding quotes added by the enumerator script
   project_name="${raw_name//\"/}"
   project_id="${raw_id//\"/}"
@@ -141,20 +144,19 @@ tail -n +2 "$CSV_FILE" | tr -d '\r' | while IFS=',' read -r raw_name raw_id; do
 
   log "Processing: ${project_name} (${project_id})"
 
-  # Resolve Contributors identity
-  storage_key=$(get_contributors_descriptor "$project_id") || {
+  # Resolve Contributors identity descriptor
+  ace_descriptor=$(get_contributors_ace_descriptor "$project_id") || {
     log "  SKIP – could not resolve Contributors group"
     failure=$((failure + 1))
     continue
   }
 
-  identity_descriptor="Microsoft.TeamFoundation.Identity;${storage_key}"
   security_token="repoV2/${project_id}"
 
-  # Build the ACE payload – merge=true preserves existing allow bits
+  # Build the ACE payload – merge=true preserves any existing allow bits
   ace_body=$(jq -n \
-    --arg token  "$security_token" \
-    --arg desc   "$identity_descriptor" \
+    --arg token "$security_token" \
+    --arg desc  "$ace_descriptor" \
     --argjson deny "$DELETE_BIT" \
     '{
       token: $token,
@@ -183,7 +185,8 @@ tail -n +2 "$CSV_FILE" | tr -d '\r' | while IFS=',' read -r raw_name raw_id; do
     log "  WARN – API responded but no ACE was returned"
     failure=$((failure + 1))
   fi
-done
+
+done < <(tail -n +2 "$CSV_FILE" | tr -d '\r')
 
 echo ""
 echo "Done. Success: ${success}  Failed/skipped: ${failure}"
