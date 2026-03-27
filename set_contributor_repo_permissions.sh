@@ -146,17 +146,18 @@ if [[ "$data_rows" -eq 0 ]]; then
   exit 1
 fi
 
-# Use process substitution (not a pipe) so the while loop runs in the current
-# shell, allowing success/failure counters to be updated correctly.
-while IFS=',' read -r raw_name raw_id; do
+# Pre-process CSV to a temp file so the pipeline fully completes before read
+# starts, avoiding process-substitution / pipefail timing issues.
+tmp_csv=$(mktemp)
+tail -n +2 "$CSV_FILE" | tr -d '\r' > "$tmp_csv"
+
+# The '|| [[ -n "${raw_name:-}" ]]' handles files whose last line has no
+# trailing newline: read populates the variables but returns 1 at EOF.
+while IFS=',' read -r raw_name raw_id || [[ -n "${raw_name:-}" ]]; do
   # Strip surrounding quotes added by the enumerator script
   project_name="${raw_name//\"/}"
   project_id="${raw_id//\"/}"
 
-  log "DEBUG: raw_name='${raw_name}' raw_id='${raw_id}' project_id='${project_id}'"
-
-  # Use if/fi rather than [[ ]] && continue — the latter exits with code 1
-  # under set -e when project_id is non-empty, killing the script silently.
   if [[ -z "$project_id" ]]; then continue; fi
 
   log "Processing: ${project_name} (${project_id})"
@@ -203,7 +204,9 @@ while IFS=',' read -r raw_name raw_id; do
     failure=$((failure + 1))
   fi
 
-done < <(tail -n +2 "$CSV_FILE" | tr -d '\r')
+done < "$tmp_csv"
+
+rm -f "$tmp_csv"
 
 echo ""
 echo "Done. Success: ${success}  Failed/skipped: ${failure}"
