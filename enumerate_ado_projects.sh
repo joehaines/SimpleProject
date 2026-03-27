@@ -71,9 +71,10 @@ while true; do
     --header "Content-Type: application/json" \
     "$url") || die "API request failed. Check your PAT and organisation name."
 
-  # Extract projects from this page
-  mapfile -t page_projects < <(echo "$response" | jq -r '.value[] | "\(.name)\t\(.state)\t\(.visibility)\t\(.id)"')
-  all_projects+=("${page_projects[@]}")
+  # Extract projects from this page (avoid mapfile; macOS ships with bash 3.2)
+  while IFS= read -r line; do
+    [[ -n "$line" ]] && all_projects+=("$line")
+  done < <(echo "$response" | jq -r '.value[] | "\(.name)\t\(.state)\t\(.visibility)\t\(.id)"')
 
   # Check for a continuation token in the response (may be absent)
   continuation_token=$(echo "$response" | jq -r '.continuationToken // empty')
