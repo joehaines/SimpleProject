@@ -64,12 +64,14 @@ echo "------------------------------------------------------"
 
 all_projects=()
 continuation_token=""
+header_file=$(mktemp)
 
 while true; do
   url="${API_BASE}/projects?${API_VERSION}&\$top=100"
   [[ -n "$continuation_token" ]] && url+="&continuationToken=${continuation_token}"
 
   response=$(curl --silent --fail --show-error \
+    --dump-header "$header_file" \
     --header "$AUTH_HEADER" \
     --header "Content-Type: application/json" \
     "$url") || die "API request failed. Check your PAT and organisation name."
@@ -79,10 +81,12 @@ while true; do
     [[ -n "$line" ]] && all_projects+=("$line")
   done < <(echo "$response" | jq -r '.value[] | "\(.name)\t\(.state)\t\(.visibility)\t\(.id)"')
 
-  # Check for a continuation token in the response (may be absent)
-  continuation_token=$(echo "$response" | jq -r '.continuationToken // empty')
+  # Continuation token is returned in the HTTP header, not the response body
+  continuation_token=$(grep -i "^x-ms-continuationtoken:" "$header_file" | tr -d '\r' | awk '{print $2}')
   [[ -z "$continuation_token" ]] && break
 done
+
+rm -f "$header_file"
 
 total=${#all_projects[@]}
 
